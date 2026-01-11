@@ -10,6 +10,8 @@ all:
         proxmox-ubuntu:
           ansible_host: "{{ worker_1_ip }}"
           ansible_user: "{{ ssh_user }}"
+          ansible_password: "{{ ssh_user_password }}"
         windows-pc:
           ansible_host: "{{ worker_2_ip }}"
           ansible_user: "{{ ssh_user }}"
+          ansible_password: "{{ ssh_user_password }}"

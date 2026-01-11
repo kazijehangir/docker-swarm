@@ -16,7 +16,7 @@ docker-swarm/
 Bootstrap (only do this on the Swarm manager)
 
 ```bash
-curl -sSL https://gist.githubusercontent.com/raw/0432d8c9374b6847ed60673b9efca35d | bash
+curl -fsSL https://gist.githubusercontent.com/raw/0432d8c9374b6847ed60673b9efca35d -o bootstrap-ansible.sh && chmod +x bootstrap-ansible.sh && ./bootstrap-ansible.sh
 ```
 
 Run ansible manually:
