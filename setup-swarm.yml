@@ -104,3 +104,48 @@
       debug:
         msg: "Stack deployed successfully!"
       when: stack_deploy.changed
+
+- name: Configure Syncthing for Managers
+  hosts: swarm_managers
+  become: true
+  vars_files:
+    - vars/secrets.yml
+  tasks:
+    - name: Install Syncthing
+      apt:
+        name: syncthing
+        state: present
+        update_cache: yes
+
+    - name: Ensure Portainer data directory exists
+      file:
+        path: "{{ portainer_data_path }}"
+        state: directory
+        owner: "{{ ssh_user }}"
+        group: "{{ ssh_user }}"
+        mode: '0755'
+
+    - name: Create Syncthing systemd service unit
+      copy:
+        dest: /etc/systemd/system/syncthing@{{ ssh_user }}.service
+        content: |
+          [Unit]
+          Description=Syncthing - Open Source Continuous File Synchronization for %i
+          After=network.target
+
+          [Service]
+          User=%i
+          ExecStart=/usr/bin/syncthing -no-browser -no-restart -logflags=0
+          Restart=on-failure
+          SuccessExitStatus=3 4
+          RestartForceExitStatus=3 4
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Start and enable Syncthing
+      systemctl:
+        name: "syncthing@{{ ssh_user }}"
+        state: started
+        enabled: yes
+        daemon_reload: yes
