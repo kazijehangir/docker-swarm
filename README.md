@@ -2,15 +2,6 @@
 
 Repo for ansible scripts to bring up machine deployments.
 
-docker-swarm/
-├── ansible.cfg
-├── inventory.ini
-├── bootstrap.sh
-├── setup-swarm.yml
-├── portainer-stack.yml
-└── vars/
-    └── secrets.yml  <-- Encrypted with ansible-vault
-
 ## Commands
 
 Bootstrap (only do this on the Swarm manager)
