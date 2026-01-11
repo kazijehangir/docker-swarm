@@ -1,0 +1,15 @@
+all:
+  children:
+    swarm_managers:
+      hosts:
+        unraid-manager:
+          ansible_host: "{{ manager_ip }}"
+          ansible_user: "{{ ssh_user }}"
+    swarm_workers:
+      hosts:
+        proxmox-ubuntu:
+          ansible_host: "{{ worker_1_ip }}"
+          ansible_user: "{{ ssh_user }}"
+        windows-pc:
+          ansible_host: "{{ worker_2_ip }}"
+          ansible_user: "{{ ssh_user }}"
