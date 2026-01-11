@@ -91,7 +91,7 @@
         - not is_active
 
     - name: Promote Worker to Manager (Via Delegation)
-      ansible.builtin.command: "docker node promote {{ inventory_hostname }}"
+      ansible.builtin.command: "docker node promote {{ ansible_hostname }}"
       delegate_to: "{{ groups['swarm_managers'][0] }}"
       when: 
         - "'swarm_managers' in group_names"
