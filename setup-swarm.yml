@@ -62,3 +62,29 @@
         join_token: "{{ worker_token }}"
         remote_addrs: ["{{ manager_ip }}:2377"]
       when: "'swarm_workers' in group_names"
+
+- name: Deploy Portainer Stack
+  hosts: swarm_managers
+  vars_files:
+    - vars/secrets.yml
+  tasks:
+    - name: Ensure Portainer data directory exists (Local VM storage)
+      file:
+        path: "/home/{{ ssh_user }}/portainer_data"
+        state: directory
+        owner: "{{ ssh_user }}"
+        group: "{{ ssh_user }}"
+        mode: '0755'
+
+    - name: Deploy Portainer stack
+      community.docker.docker_stack:
+        name: portainer
+        state: present
+        compose:
+          - "/home/{{ ssh_user }}/docker-swarm/portainer-agent-stack.yml"
+      register: stack_deploy
+
+    - name: Show stack deployment status
+      debug:
+        msg: "Stack deployed successfully!"
+      when: stack_deploy.changed
