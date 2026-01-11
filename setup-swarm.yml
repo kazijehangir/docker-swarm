@@ -70,12 +70,20 @@
   vars_files:
     - vars/secrets.yml
   tasks:
+    - name: Check Swarm Status
+      ansible.builtin.shell: docker info --format '{{ "{{" }} .Swarm.LocalNodeState {{ "}}" }}'
+      register: swarm_status
+      changed_when: false
+
     - name: Initialize Swarm on Manager
       community.docker.docker_swarm:
         state: present
         advertise_addr: "{{ manager_ip }}"
       register: swarm_info
-      when: "'swarm_managers' in group_names"
+      # Only run this if the node is a manager AND not already in a swarm
+      when: 
+        - "'swarm_managers' in group_names"
+        - "swarm_status.stdout != 'active'"
 
     - name: Set Join Token Fact
       set_fact:
