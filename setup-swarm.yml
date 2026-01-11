@@ -144,7 +144,7 @@
           WantedBy=multi-user.target
 
     - name: Start and enable Syncthing
-      systemctl:
+      ansible.builtin.systemd::
         name: "syncthing@{{ ssh_user }}"
         state: started
         enabled: yes
