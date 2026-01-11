@@ -168,13 +168,6 @@
         group: "{{ ssh_user }}"
         mode: '0755'
 
-    - name: Allow Syncthing UI to be reached from the network
-      ansible.builtin.replace:
-        path: "/home/{{ ssh_user }}/.config/syncthing/config.xml"
-        regexp: '127.0.0.1:8384'
-        replace: '0.0.0.0:8384'
-      notify: Restart Syncthing
-
     - name: Create Syncthing systemd service unit
       copy:
         dest: /etc/systemd/system/syncthing@{{ ssh_user }}.service
@@ -192,6 +185,31 @@
 
           [Install]
           WantedBy=multi-user.target
+
+    - name: Ensure Syncthing config directory exists
+      ansible.builtin.file:
+        path: "/home/{{ ssh_user }}/.config/syncthing"
+        state: directory
+        owner: "{{ ssh_user }}"
+        group: "{{ ssh_user }}"
+        mode: '0700'
+
+    - name: Force-generate Syncthing config if missing
+      ansible.builtin.command:
+        cmd: "syncthing generate --home=/home/{{ ssh_user }}/.config/syncthing"
+        creates: "/home/{{ ssh_user }}/.config/syncthing/config.xml"
+      become_user: "{{ ssh_user }}"
+
+    - name: Stop Syncthing to allow config edits
+      ansible.builtin.systemd:
+        name: "syncthing@{{ ssh_user }}"
+        state: stopped
+
+    - name: Allow Syncthing UI to be reached from the network
+      ansible.builtin.replace:
+        path: "/home/{{ ssh_user }}/.config/syncthing/config.xml"
+        regexp: '127.0.0.1:8384'
+        replace: '0.0.0.0:8384'
 
     - name: Start and enable Syncthing
       ansible.builtin.systemd:
