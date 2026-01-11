@@ -167,6 +167,7 @@
         owner: "{{ ssh_user }}"
         group: "{{ ssh_user }}"
         mode: '0755'
+        recurse: yes
 
     - name: Create Syncthing systemd service unit
       copy:
