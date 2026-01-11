@@ -23,11 +23,13 @@ On a device with Github access to push to <https://github.com/kazijehangir/docke
 
 1. Edit docker-swarm/vars/secrets.yml to add the new node's IP address.
 
-```bash
-cd docker-swarm/
-ansible-vault edit vars/secrets.yml
-```
+  ```bash
+  cd docker-swarm/
+  ansible-vault edit vars/secrets.yml
+  ```
 
 1. Edit docker-swarm/inventory.yml to add the new node under swarm_managers or swarm_workers.
+
+1. Commit and push changes to github.
 
 1. Go to a manager node and run the bootstrap command above.
