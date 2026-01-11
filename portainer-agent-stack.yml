@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  agent:
+    image: portainer/agent:2.27.0
+    environment:
+      - AGENT_CLUSTER_ADDR=tasks.portainer_agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      - portainer_internal
+    deploy:
+      mode: global
+
+  portainer:
+    image: portainer/portainer-ce:2.27.0
+    command: -H tcp://tasks.portainer_agent:9001 --tlsskipverify
+    ports:
+      - target: 9443
+        published: 9443
+        protocol: tcp
+        mode: host  # Direct path to your VM IP
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: host
+    volumes:
+      # Use the absolute path on your VM
+      - /home/jehangir/portainer_data:/data
+    networks:
+      - portainer_internal
+    environment:
+      - DOCKER_MIN_API_VERSION=1.24
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+
+networks:
+  portainer_internal:
+    driver: overlay
+    attachable: true
+
