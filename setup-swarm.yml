@@ -70,10 +70,16 @@
   vars_files:
     - vars/secrets.yml
   tasks:
-    - name: Check Swarm Status
-      ansible.builtin.shell: docker info --format '{{ "{{" }} .Swarm.LocalNodeState {{ "}}" }}'
-      register: swarm_status
+    - name: Check Swarm Status and Role
+      ansible.builtin.shell: |
+        echo "$(docker info --format '{{ "{{" }} .Swarm.LocalNodeState {{ "}}" }}') $(docker info --format '{{ "{{" }} .Swarm.ControlAvailable {{ "}}" }}')"
+      register: swarm_info_raw
       changed_when: false
+
+    - name: Set Swarm Facts
+      ansible.builtin.set_fact:
+        is_active: "{{ 'active' in swarm_info_raw.stdout }}"
+        is_manager: "{{ 'true' in swarm_info_raw.stdout }}"
 
     - name: Initialize Swarm on Manager
       community.docker.docker_swarm:
@@ -83,6 +89,24 @@
       when: 
         - "'swarm_managers' in group_names"
         - "swarm_status.stdout != 'active'"
+
+    - name: Promote Worker to Manager (Run from existing Manager)
+      ansible.builtin.command: "docker node promote {{ inventory_hostname }}"
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      when: 
+        - "'swarm_managers' in group_names"
+        - is_active
+        - not is_manager
+      # This prevents the task from running if the current host IS the first manager
+      run_once: false 
+
+    - name: Get Join Token (Run ONLY on an actual Manager)
+      ansible.builtin.command: docker swarm join-token -q worker
+      register: existing_worker_token
+      changed_when: false
+      when: 
+        - "'swarm_managers' in group_names"
+        - is_manager or (inventory_hostname == groups['swarm_managers'][0])
 
     - name: Get Join Token (Fallback for existing Swarm)
       ansible.builtin.command: docker swarm join-token -q worker
