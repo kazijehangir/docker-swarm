@@ -81,51 +81,35 @@
         is_active: "{{ 'active' in swarm_info_raw.stdout }}"
         is_manager: "{{ 'true' in swarm_info_raw.stdout }}"
 
-    - name: Initialize Swarm on Manager
+    - name: Initialize Swarm on Primary Manager
       community.docker.docker_swarm:
         state: present
         advertise_addr: "{{ manager_ip }}"
-      register: swarm_info
+      register: swarm_init_out
       when: 
-        - "'swarm_managers' in group_names"
-        - "swarm_status.stdout != 'active'"
+        - inventory_hostname == groups['swarm_managers'][0]
+        - not is_active
 
-    - name: Promote Worker to Manager (Run from existing Manager)
+    - name: Promote Worker to Manager (Via Delegation)
       ansible.builtin.command: "docker node promote {{ inventory_hostname }}"
       delegate_to: "{{ groups['swarm_managers'][0] }}"
       when: 
         - "'swarm_managers' in group_names"
         - is_active
         - not is_manager
-      # This prevents the task from running if the current host IS the first manager
-      run_once: false 
+        - inventory_hostname != groups['swarm_managers'][0]
 
-    - name: Get Join Token (Run ONLY on an actual Manager)
+    - name: Get Join Token (Run on Primary Manager)
       ansible.builtin.command: docker swarm join-token -q worker
-      register: existing_worker_token
+      register: worker_token_cmd
       changed_when: false
-      when: 
-        - "'swarm_managers' in group_names"
-        - is_manager or (inventory_hostname == groups['swarm_managers'][0])
-
-    - name: Get Join Token (Fallback for existing Swarm)
-      ansible.builtin.command: docker swarm join-token -q worker
-      register: existing_worker_token
-      changed_when: false
-      when: 
-        - "'swarm_managers' in group_names"
-        - "swarm_status.stdout == 'active'"
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      run_once: true
 
     - name: Set Join Token Fact
       ansible.builtin.set_fact:
-        worker_token: >-
-          {{
-            swarm_info.swarm_facts.JoinTokens.Worker 
-            if (swarm_info is defined and swarm_info.swarm_facts is defined) 
-            else existing_worker_token.stdout
-          }}
+        worker_token: "{{ worker_token_cmd.stdout }}"
       run_once: true
-      when: "'swarm_managers' in group_names"
 
     - name: Join Worker Nodes
       community.docker.docker_swarm:
@@ -133,7 +117,9 @@
         advertise_addr: "{{ ansible_host }}"
         join_token: "{{ worker_token }}"
         remote_addrs: ["{{ manager_ip }}:2377"]
-      when: "'swarm_workers' in group_names"
+      when: 
+        - "'swarm_workers' in group_names"
+        - not is_active
 
 - name: Deploy Portainer Stack
   hosts: swarm_managers
