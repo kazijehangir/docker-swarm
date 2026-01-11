@@ -140,6 +140,7 @@
         state: present
         compose:
           - "/home/{{ ssh_user }}/docker-swarm/portainer-agent-stack.yml"
+      when: inventory_hostname == groups['swarm_managers'][0]
       register: stack_deploy
 
     - name: Show stack deployment status
