@@ -17,12 +17,14 @@
         state: present
         update_cache: yes
 
-    - name: Install Python dependencies for Docker modules
-      pip:
-        name: 
-          - jsondiff
-          - pyyaml
-          - docker
+    - name: Install Python dependencies via apt
+      apt:
+        name:
+          - python3-jsondiff
+          - python3-yaml
+          - python3-docker
+        state: present
+        update_cache: yes
 
     - name: Create directory for Docker keyring
       file:
