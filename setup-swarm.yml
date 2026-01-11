@@ -80,15 +80,28 @@
         state: present
         advertise_addr: "{{ manager_ip }}"
       register: swarm_info
-      # Only run this if the node is a manager AND not already in a swarm
       when: 
         - "'swarm_managers' in group_names"
         - "swarm_status.stdout != 'active'"
 
+    - name: Get Join Token (Fallback for existing Swarm)
+      ansible.builtin.command: docker swarm join-token -q worker
+      register: existing_worker_token
+      changed_when: false
+      when: 
+        - "'swarm_managers' in group_names"
+        - "swarm_status.stdout == 'active'"
+
     - name: Set Join Token Fact
-      set_fact:
-        worker_token: "{{ hostvars[groups['swarm_managers'][0]]['swarm_info']['swarm_facts']['JoinTokens']['Worker'] }}"
+      ansible.builtin.set_fact:
+        worker_token: >-
+          {{
+            swarm_info.swarm_facts.JoinTokens.Worker 
+            if (swarm_info is defined and swarm_info.swarm_facts is defined) 
+            else existing_worker_token.stdout
+          }}
       run_once: true
+      when: "'swarm_managers' in group_names"
 
     - name: Join Worker Nodes
       community.docker.docker_swarm:
@@ -143,6 +156,13 @@
         owner: "{{ ssh_user }}"
         group: "{{ ssh_user }}"
         mode: '0755'
+
+    - name: Allow Syncthing UI to be reached from the network
+      ansible.builtin.replace:
+        path: "/home/{{ ssh_user }}/.config/syncthing/config.xml"
+        regexp: '127.0.0.1:8384'
+        replace: '0.0.0.0:8384'
+      notify: Restart Syncthing
 
     - name: Create Syncthing systemd service unit
       copy:
