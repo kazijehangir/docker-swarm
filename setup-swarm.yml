@@ -84,7 +84,7 @@
     - name: Initialize Swarm on Primary Manager
       community.docker.docker_swarm:
         state: present
-        advertise_addr: "{{ manager_ip }}"
+        advertise_addr: "{{ unraid_vm_ip }}"
       register: swarm_init_out
       when: 
         - inventory_hostname == groups['swarm_managers'][0]
@@ -116,7 +116,7 @@
         state: join
         advertise_addr: "{{ ansible_host }}"
         join_token: "{{ worker_token }}"
-        remote_addrs: ["{{ manager_ip }}:2377"]
+        remote_addrs: ["{{ unraid_vm_ip }}:2377"]
       when: 
         - "'swarm_workers' in group_names"
         - not is_active

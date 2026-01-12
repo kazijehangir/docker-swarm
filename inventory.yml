@@ -3,17 +3,17 @@ all:
     swarm_managers:
       hosts:
         unraid-manager:
-          ansible_host: "{{ manager_ip }}"
+          ansible_host: "{{ unraid_vm_ip }}"
           ansible_user: "{{ ssh_user }}"
           ansible_password: "{{ ssh_user_password }}"
           ansible_become_password: "{{ ssh_user_password }}"
         proxmox-ubuntu:
-          ansible_host: "{{ worker_1_ip }}"
+          ansible_host: "{{ aber_vm_ip }}"
           ansible_user: "{{ ssh_user }}"
           ansible_password: "{{ ssh_user_password }}"
           ansible_become_password: "{{ ssh_user_password }}"
         prodesk-ubuntu:
-          ansible_host: "{{ worker_2_ip }}"
+          ansible_host: "{{ prodesk_vm_ip }}"
           ansible_user: "{{ ssh_user }}"
           ansible_password: "{{ ssh_user_password }}"
           ansible_become_password: "{{ ssh_user_password }}"
