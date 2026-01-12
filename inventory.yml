@@ -12,6 +12,11 @@ all:
           ansible_user: "{{ ssh_user }}"
           ansible_password: "{{ ssh_user_password }}"
           ansible_become_password: "{{ ssh_user_password }}"
+        prodesk-ubuntu:
+          ansible_host: "{{ worker_2_ip }}"
+          ansible_user: "{{ ssh_user }}"
+          ansible_password: "{{ ssh_user_password }}"
+          ansible_become_password: "{{ ssh_user_password }}"
     # swarm_workers:
     #   hosts:
         # windows-pc:
