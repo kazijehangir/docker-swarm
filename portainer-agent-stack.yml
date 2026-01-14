@@ -27,7 +27,7 @@ services:
         mode: host
     volumes:
       # Use the absolute path on your VM
-      - /home/jehangir/portainer_data:/data
+      - portainer_data:/data
     networks:
       - portainer_internal
     environment:
@@ -43,3 +43,10 @@ networks:
     driver: overlay
     attachable: true
 
+volumes:
+  portainer_data:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=10.0.2.1,rw,nfsvers=4"
+      device: ":/mnt/user/appdata-shared/portainer"
