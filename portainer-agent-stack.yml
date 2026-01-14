@@ -27,7 +27,7 @@ services:
         mode: host
     volumes:
       # Use the absolute path on your VM
-      - /home/jehangir/portainer_data:/data
+      - ${USER_HOME}/portainer_data:/data
     networks:
       - portainer_internal
     environment:
